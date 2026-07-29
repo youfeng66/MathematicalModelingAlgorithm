@@ -1,0 +1,43 @@
+# ================== Python ==================
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+
+# ================== Jupyter ==================
+.ipynb_checkpoints/
+*.ipynb_checkpoints*
+.Jupyter
+
+# ================== IDE ==================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ================== 数据与输出 ==================
+# 运行结果图片（如需保留可删除此行）
+*.png
+*.jpg
+*.jpeg
+
+# 生成的 CSV 结果文件（如需保留可删除此行）
+*稳定性分析.csv
+*_result.csv
+
+# ================== 系统文件 ==================
+Desktop.ini
+$RECYCLE.BIN/
