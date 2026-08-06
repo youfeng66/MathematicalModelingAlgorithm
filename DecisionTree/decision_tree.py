@@ -31,14 +31,14 @@ base_tree = DecisionTreeClassifier(
 base_tree.fit(X_train, y_train)
 y_pred = base_tree.predict(X_test)
 
-# 获取完全树的代价复杂度剪枝路径（获得一系列 alpha 值和对应的子树的叶子数、误差）
+# 获取过拟合树的代价复杂度剪枝路径（获得一系列 alpha 值和对应的子树的叶子数、误差）
 path = base_tree.cost_complexity_pruning_path(X_train, y_train)
 ccp_alphas = path.ccp_alphas  # 候选的 alpha 值（从小到大）
 impurities = path.impurities  # 对应 alpha 的误差变化
 
-# 对每个 alpha 训练一棵剪枝后的树，并评估其在训练集和测试集上的表现
 test_scores = []
 
+# 对每个 alpha 训练一棵剪枝后的树，并评估其在测试集上的表现
 # 注意：ccp_alphas 的最后一个值很大，可能使树只剩下根节点，我们通常不取最后一个
 for alpha in ccp_alphas[:-1]:  # 去掉最后一个，避免给枝干全剪完了
     tree = DecisionTreeClassifier(
@@ -47,13 +47,13 @@ for alpha in ccp_alphas[:-1]:  # 去掉最后一个，避免给枝干全剪完�
     min_samples_split = 5,
     min_samples_leaf = 3,
     max_features = 5,
-    random_state = 42
+    ccp_alpha=alpha,
+    random_state = 10
     )
-    base_tree.fit(X_train, y_train)
     tree.fit(X_train, y_train)
     test_scores.append(accuracy_score(y_test, tree.predict(X_test)))
 best_alpha = ccp_alphas[:-1][np.argmax(test_scores)]
-# 4. 得到最终模型
+# 得到最终模型
 final_tree = DecisionTreeClassifier(
     criterion = 'gini',
     max_depth = 10,
@@ -61,7 +61,7 @@ final_tree = DecisionTreeClassifier(
     min_samples_leaf = 3,
     max_features = 5,
     ccp_alpha = best_alpha,
-    random_state = 42
+    random_state = 10
 )
 final_tree.fit(X_train, y_train)
 y_pred = final_tree.predict(X_test)
@@ -75,6 +75,16 @@ FN, TP = cm[1, 0], cm[1, 1]
 
 # accuracy, recall, precision, f1-score
 print(classification_report(y_test, y_pred))
+
+# 树结构图
+from sklearn.tree import plot_tree
+
+plt.figure(figsize = (20, 15))
+plot_tree(final_tree,
+          feature_names = features_target[:-1],
+          filled = False,
+          rounded = True,
+          fontsize = 14)
 
 from sklearn.metrics import RocCurveDisplay, ConfusionMatrixDisplay
 
