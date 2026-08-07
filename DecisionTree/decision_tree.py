@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 
@@ -18,15 +19,15 @@ data['Embarked'] = data['Embarked'].fillna(most_frequent_embarked, inplace = Fal
 
 X = data.iloc[:, :-1].values
 y = data.iloc[:, -1].values
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
 
 base_tree = DecisionTreeClassifier(
     criterion = 'gini',   #或 'entropy'
-    max_depth = 10,
+    max_depth = 4,
     min_samples_split = 5,
     min_samples_leaf = 3,
     max_features = 5,
-    random_state = 42
+    random_state = 0
 )
 base_tree.fit(X_train, y_train)
 y_pred = base_tree.predict(X_test)
@@ -43,25 +44,25 @@ test_scores = []
 for alpha in ccp_alphas[:-1]:  # 去掉最后一个，避免给枝干全剪完了
     tree = DecisionTreeClassifier(
     criterion = 'gini',
-    max_depth = 10,
+    max_depth = 4,
     min_samples_split = 5,
     min_samples_leaf = 3,
     max_features = 5,
     ccp_alpha=alpha,
-    random_state = 10
+    random_state = 0
     )
-    tree.fit(X_train, y_train)
-    test_scores.append(accuracy_score(y_test, tree.predict(X_test)))
+    s = cross_val_score(tree, X_train, y_train, cv=5).mean()
+    test_scores.append(s)
 best_alpha = ccp_alphas[:-1][np.argmax(test_scores)]
 # 得到最终模型
 final_tree = DecisionTreeClassifier(
     criterion = 'gini',
-    max_depth = 10,
+    max_depth = 4,
     min_samples_split = 5,
     min_samples_leaf = 3,
     max_features = 5,
     ccp_alpha = best_alpha,
-    random_state = 10
+    random_state = 0
 )
 final_tree.fit(X_train, y_train)
 y_pred = final_tree.predict(X_test)
@@ -79,12 +80,14 @@ print(classification_report(y_test, y_pred))
 # 树结构图
 from sklearn.tree import plot_tree
 
-plt.figure(figsize = (20, 15))
+from sklearn.tree import plot_tree
+
+plt.figure(figsize = (25, 10), dpi = 300)
 plot_tree(final_tree,
           feature_names = features_target[:-1],
           filled = False,
           rounded = True,
-          fontsize = 14)
+          fontsize = 20)
 
 from sklearn.metrics import RocCurveDisplay, ConfusionMatrixDisplay
 
