@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.datasets import load_diabetes
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
@@ -23,9 +24,21 @@ X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
 # 4.训练模型并进行预测
-ridge = Ridge(alpha = 1)
-ridge.fit(X_train, y_train)
-y_pred = ridge.predict(X_test)
+ridge = RidgeCV()
+param_grid = {'alphas': [0.1, 1, 10, 100, 1000]}
+grid_searcher = GridSearchCV(estimator = ridge,
+                             param_grid = param_grid,
+                             cv = 5,    #做 5 次交叉验证
+                             scoring = 'accuracy',
+                             n_jobs = -1    #使用所有 cpu 核心进行并行运算
+                             )
+
+grid_searcher.fit(X_train, y_train)
+print(f"最佳参数：{grid_searcher.best_params_}")
+print(f"最佳交叉验证分数：{grid_searcher.best_score_}")
+
+best_ridge = grid_searcher.best_estimator_
+y_pred = best_ridge.predict(X_test)
 
 # 5.评估预测结果
 mse = mean_squared_error(y_test, y_pred)
@@ -60,7 +73,6 @@ ax2.set_title('残差分布图')
 
 plt.tight_layout()
 plt.savefig('ridge_pred_residual.png', dpi=200, bbox_inches='tight')
-plt.show()
 
 # 6.2 Alpha 路径图——系数收缩过程
 alphas = np.logspace(-3, 3, 50)  # 0.001 到 1000，对数均匀取 50 个点
@@ -79,4 +91,3 @@ plt.title('不同 alpha 下的系数收缩路径')
 plt.legend(diabetes.feature_names, bbox_to_anchor=(1.02, 1), loc='upper left')
 plt.tight_layout()
 plt.savefig('ridge_alpha_path.png', dpi=200, bbox_inches='tight')
-plt.show()
